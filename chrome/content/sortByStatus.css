@@ -1,0 +1,3 @@
+group {
+  -moz-binding: url("chrome://sortByStatus/content/group.xml#sortByStatusGroup");
+}

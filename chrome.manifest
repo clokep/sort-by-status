@@ -1,0 +1,3 @@
+content sortByStatus chrome/content/
+
+style chrome://instantbird/content/blist.xul chrome://sortByStatus/content/sortByStatus.css
