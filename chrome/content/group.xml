@@ -24,22 +24,12 @@
         <parameter name="aContactB"/>
         <body>
         <![CDATA[
-          let order;
-          if (!aContactA.statusType && !aContactB.statusType)
-            order = 0;
-          else if (!aContactA.statusType)
-            order = 1;
-          else if (!aContactB.statusType)
-            order = -1;
-          else
-            order = aContactB.statusType - aContactA.statusType;
+          let order = aContactB.statusType - aContactA.statusType;
 
-          // If they're the same status, compare the names.
-          if (!order) {
-            let a = aContactA.displayName.toLowerCase();
-            let b = aContactB.displayName.toLowerCase();
-            order = a.localeCompare(b);
-          }
+          // If they're the same status, use the standard sort function.
+          let parent = this.__proto__.__proto__;
+          if (!order && parent.hasOwnProperty("sortComparator"))
+            return parent.sortComparator.apply(this, arguments);
 
           return order;
         ]]>
@@ -53,49 +43,10 @@
         <parameter name="aData"/>
         <body>
         <![CDATA[
-          this.__proto__.__proto__.call(this, aSubject, aTopic, aData);
-          if (this.showOffline && (aTopic == "contact-added" ||
-                                   aTopic == "contact-moved-in") ||
-              !this.showOffline && aSubject.online &&
-              (aTopic == "contact-availability-changed" ||
-               aTopic == "contact-added" ||
-               aTopic == "contact-moved-in")) {
-            this.addContact(aSubject);
-            this._updateGroupLabel();
-            return;
-          }
+          this.__proto__.__proto__.observe.apply(this, arguments);
 
-          if (aTopic == "contact-no-longer-dummy") {
-            let oldId = parseInt(aData);
-            if (this.contactsById.hasOwnProperty(oldId)) {
-              let contact = this.contactsById[oldId];
-              delete this.contactsById[oldId];
-              this.contactsById[contact.contact.id] = contact;
-            }
-            return;
-          }
-
-          if (aTopic == "contact-display-name-changed") {
+          if (aTopic == "contact-status-changed")
             this.updateContactPosition(aSubject);
-            return;
-          }
-
-          if (aTopic == "tag-hidden") {
-            this.setAttribute("collapsing", "true");
-            this.addEventListener("transitionend", this._transitionEnd, true);
-            for each (let contact in this.contacts) {
-              contact.state = "collapsing";
-              contact.finishRemoveNode();
-            }
-            return;
-          }
-
-          // Everything above here is from Instantbird's group.xml file. XBL
-          // doesn't support calling a parent's methods.
-          if (aTopic == "contact-status-changed") {
-            this.updateContactPosition(aSubject);
-            return;
-          }
         ]]>
         </body>
       </method>
